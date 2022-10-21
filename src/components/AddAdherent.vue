@@ -2,34 +2,35 @@
   
   <div class="list row">
     <div class="col-md-6">
-      <div class="submit-form">
+      <form class="submit-form" v-on:submit.prevent="saveAdherent">
         <div v-if="!submitted">
           
           <label for="moralPerson">Nature de l'adhérent</label>
-          <div class="form-group">
-              <label class="radio-inline" >
+          <div class="form-check">
+              <label class="form-check-label" for="moralPerson0">Physique</label>
               <input
                 type="radio"
-                class="form-control"
+                class="form-check-input"
                 id="moralPerson0"
                 required
                 v-model="nu_adherent.moralPerson"
                 name="moralPerson"
                 value='phy'
                 checked
-              />Physique
+              />
+            </div>
+            <div class="form-check">
+              <label class="form-check-label"  for="moralPerson1">Morale
               </label>
-              <label class="radio-inline" >
               <input
                 type="radio"
-                class="form-control"
+                class="form-check-input"
                 id="moralPerson1"
                 required
                 v-model="nu_adherent.moralPerson"
                 name="moralPerson"
                 value="mor"
-              />Morale
-              </label>
+              />
           </div>
           <div class="form-group" >
             <label for="lastname">Nom</label>
@@ -91,14 +92,14 @@
             />
           </div>
     
-          <button @click="saveAdherent" class="btn btn-success">Appliquer</button>
+          <button type="submit"  :disabled="!isValid" class="btn btn-success">Appliquer</button>
         </div>
     
         <div v-else>
           <h4>You submitted successfully!</h4>
           <button class="btn btn-success" @click="newAdherent">Add</button>
         </div>
-      </div>
+      </form>
     </div>
     <div class="col-md-3">
         <div v-if="currentAdherent">
@@ -146,7 +147,7 @@
 import AdherentDataService from "../services/AdherentDataService";
 import BanklineDataService from "../services/BanklineDataService";
 import ThirdpartyDataService from "../services/ThirdpartyDataService";
-
+import * as EmailValidator from 'email-validator';
 
   export default {
     name: "add-adherent",
@@ -168,11 +169,14 @@ import ThirdpartyDataService from "../services/ThirdpartyDataService";
         currentAdherent: null,
         currentIndex: -1,
         editMode: false,
+        isValid: false,
       };
     },
     methods: {
       getAdhesionDate(){
-        return new Date(parseInt(this.$root.subyear),parseInt(this.$root.submonth)-1, parseInt(this.$root.subday));
+        console.log(this.$root.subDatetime)
+        return this.$root.subDatetime;
+
       },
       saveAdherent() {
         var data = {
@@ -202,11 +206,13 @@ import ThirdpartyDataService from "../services/ThirdpartyDataService";
           AdherentDataService.update(this.nu_adherent.id, data)
             .then(response => {
               console.log(response.data);
+              this.updateThirdparty(response.data)
               if (this.subscription.amount){
                 this.saveSubscription(response.data.id);
               }
               this.submitted = true;
               this.editMode = false;
+              this.currentAdherent = null;
             })
             .catch(e => {
               console.log(e);
@@ -229,6 +235,34 @@ import ThirdpartyDataService from "../services/ThirdpartyDataService";
               console.log(e);
             });
       },
+      
+      updateThirdparty(adherent){
+        if (adherent.fk_soc){
+          ThirdpartyDataService.update(adherent.fk_soc,adherent.firstname,adherent.lastname,adherent.email)
+              .then(response => {
+                console.log(response.data);
+              })
+              .catch(e => {
+                console.log(e);
+              });
+         
+        }else{
+          ThirdpartyDataService.create(this.nu_adherent.firstname,this.nu_adherent.lastname,this.nu_adherent.email)
+              .then(response => {
+                console.log(response.data);
+                AdherentDataService.update(adherent.id, {socid:response.data})
+                  .then(up_response => {
+                    console.log(up_response.data);
+                  })
+                  .catch(e => {
+                    console.log(e);
+                  });
+              })
+              .catch(e => {
+                console.log(e);
+              });
+        }
+      },
 
       saveSubscription(id){
         
@@ -240,7 +274,7 @@ import ThirdpartyDataService from "../services/ThirdpartyDataService";
               .then(b_link => {
                 console.log(b_link);
                 var start = this.getAdhesionDate();
-                var end = this.getAdhesionDate();
+                var end = new Date(this.getAdhesionDate());
                 end.setFullYear(end.getFullYear()+1);
                
                 AdherentDataService.addSubscription(id, "2",start.valueOf()/1000,end.valueOf()/1000,this.subscription.amount,"Adhésion / cotisation")
@@ -279,9 +313,9 @@ import ThirdpartyDataService from "../services/ThirdpartyDataService";
           email: "",
           moralPerson: "phy"
         };
+        this.isValid = false;
         this.subscription = {};
         this.refreshList();
-
       },
       retrieveAdherents() {
         AdherentDataService.getAll(this.nu_adherent.firstname,this.nu_adherent.lastname,this.nu_adherent.societe,this.nu_adherent.email)
@@ -301,6 +335,8 @@ import ThirdpartyDataService from "../services/ThirdpartyDataService";
           this.currentAdherent = null;
           this.currentIndex = -1;
         }
+        
+        this.isValid = (this.getAdhesionDate() != null) && this.nu_adherent.firstname.length && this.nu_adherent.lastname.length && this.nu_adherent.moralPerson && (this.nu_adherent.email==null || EmailValidator.validate(this.nu_adherent.email))
       },
   
       setActiveAdherent(adherent, index) {

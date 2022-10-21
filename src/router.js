@@ -43,7 +43,7 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth) {
-    if (!storageHelper.getItem('dolapikey')) next('/login')
+    if (!storageHelper.getItem('dolapikey')) { next('/login') }
     else next()
   } else next()
 })

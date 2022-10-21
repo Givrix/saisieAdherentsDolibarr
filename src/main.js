@@ -1,7 +1,11 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-import 'bootstrap'
-import 'bootstrap/dist/css/bootstrap.min.css'
+// Import our custom CSS
+import './scss/styles.scss'
+
+// Import all of Bootstrap's JS
+import * as bootstrap from 'bootstrap'
+
 
 import config from "./config";
 
@@ -13,7 +17,7 @@ import router from './router'
  
 const app = createApp(App);
 
-app.config.globalProperties.base_domain = `http://${config.domain}}`;
+app.config.globalProperties.base_domain = `http://${config.domain}`;
 app.config.globalProperties.bank_account = config.cash_account;
 
 

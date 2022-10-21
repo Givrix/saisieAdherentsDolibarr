@@ -11,50 +11,27 @@
           <router-link to="/add" class="nav-link">Add</router-link>
         </li>
       </div>
-          <p class="navbar-text">Jour </p>
+          
         
-      <form class="navbar-form navbar-left">
+      <form class="navbar-form d-flex justify-content-end">
+        <span class="navbar-text">Jour d'adhésion</span>
         <div class="form-group">
             <input
-              type="text"
+              type="date"
               class="form-control"
-              id="subday"
+              id="subdate"
               required
-              v-model="subday"
-              name="subday"
+              v-model="subdate"
+              name="subdate"
+              v-on:change="checkDate"
             />
             </div>
 
           </form>
 
-            <p class="navbar-text">Mois </p>
-      <form class="navbar-form navbar-left">
-        <div class="form-group">
-            <input
-              type="text"
-              class="form-control"
-              id="submonth"
-              required
-              v-model="submonth"
-              name="submonth"
-            />
-            </div>
-          </form>
+            
 
-            <p class="navbar-text">Année </p>
-      <form class="navbar-form navbar-left">
-        <div class="form-group">
-            <input
-              type="text"
-              class="form-control"
-              id="subyear"
-              required
-              v-model="subyear"
-              name="subyear"
-            />
-            </div>
-
-          </form>
+            
     </nav>
 
     <div class="container-fluid mt-3">
@@ -68,10 +45,17 @@ export default {
   name: "saisie-adherents",
   data() {
       return {
-        subday: '',
-        submonth: '',
-        subyear: ''
+        subdate: null,
+        subDatetime: null
       }
+  },
+  methods: {
+    checkDate(){
+      const subdate = new Date(this.subdate);
+        if (subdate.valueOf()!=0 && subdate.toString() != 'Invalid Date'){
+          this.subDatetime = subdate;
+        }
+    }
   }
 };
 </script>
