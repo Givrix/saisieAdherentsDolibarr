@@ -45,7 +45,8 @@ export default {
                 this.error = false
                 storageHelper.setItem('dolapikey', response.data.success.token)
                 LoginDataService.setToken(response.data.success.token)
-                this.$router.push('add')
+                this.$root.connected = true;
+                this.$router.push({path : '/add'})
               } else {
                 this.error = true
               }

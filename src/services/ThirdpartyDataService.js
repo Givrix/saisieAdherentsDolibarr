@@ -3,12 +3,18 @@ import http from "../http-common";
 
 
 class ThirdpartyDataService {
-    create(lastname,firstname,email) {
+    create(adherent) {
+      var name = ''
+      if(adherent.moralPerson == 'phy'){
+        name = adherent.firstname+' '+adherent.lastname
+      }else{
+        name = adherent.societe
+      }
       var thirdparty = {
-        name: firstname+' '+lastname,
-        lastname: lastname,
-        firstname: firstname,
-        email: email,
+        name: name,
+        lastname: adherent.lastname,
+        firstname: adherent.firstname,
+        email: adherent.email,
         client: "1",
         prospect: 0,
         fournisseur: "0"
@@ -16,12 +22,18 @@ class ThirdpartyDataService {
         console.log(thirdparty)
         return http.post(`/thirdparties`, thirdparty);
     }
-    update(id, lastname,firstname,email) {
+    update(id, adherent) {
+      var name = ''
+      if(adherent.moralPerson == 'phy'){
+        name = adherent.firstname+' '+adherent.lastname
+      }else{
+        name = adherent.societe
+      }
       var thirdparty = {
-        name: firstname+' '+lastname,
-        lastname: lastname,
-        firstname: firstname,
-        email: email
+        name: name,
+        lastname: adherent.lastname,
+        firstname: adherent.firstname,
+        email: adherent.email
       }
         console.log(thirdparty)
         return http.put(`/thirdparties/${id}`, thirdparty);

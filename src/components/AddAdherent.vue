@@ -33,16 +33,6 @@
               />
           </div>
           <div class="form-group" >
-            <label for="lastname">Nom</label>
-            <input
-              type="text"
-              class="form-control"
-              id="lastname"
-              required
-              v-model.trim="nu_adherent.lastname"
-              name="lastname"
-              v-on:input="refreshList"
-            />
             <label for="firstname">Prénom</label>
             <input
               type="text"
@@ -53,6 +43,16 @@
               name="firstname"
               v-on:input="refreshList"
             />
+            <label for="lastname">Nom</label>
+            <input
+              type="text"
+              class="form-control"
+              id="lastname"
+              required
+              v-model.trim="nu_adherent.lastname"
+              name="lastname"
+              v-on:input="refreshList"
+            />
           </div>
           <div class="form-group" v-if="nu_adherent.moralPerson == 'mor'">
             <label for="societe">Société</label>
@@ -60,7 +60,6 @@
               type="text"
               class="form-control"
               id="societe"
-              required
               v-model.trim="nu_adherent.societe"
               name="societe"
               v-on:input="refreshList"
@@ -73,7 +72,6 @@
               type="text"
               class="form-control"
               id="email"
-              required
               v-model.trim="nu_adherent.email"
               name="email"
               v-on:input="refreshList"
@@ -85,7 +83,7 @@
               type="text"
               class="form-control"
               id="amount"
-              required
+              
               v-model.trim="subscription.amount"
               name="amount"
               v-on:input="refreshList"
@@ -104,6 +102,13 @@
     <div class="col-md-3">
         <div v-if="currentAdherent">
           <h4>Adherent</h4>
+          <div>
+            <i v-if="currentAdherent.morphy == 'phy'" class="bi bi-person-circle"></i>
+            <i v-if="currentAdherent.morphy == 'mor'" class="bi bi-building"></i>
+          </div>
+          <div v-if="currentAdherent.morphy == 'mor'">
+            <label><strong>Société:</strong></label> {{ currentAdherent.societe }}
+          </div>
           <div>
             <label><strong>Prénom:</strong></label> {{ currentAdherent.firstname }}
           </div>
@@ -220,7 +225,7 @@ import * as EmailValidator from 'email-validator';
         }
       },
       createThirdparty(id){
-        ThirdpartyDataService.create(this.nu_adherent.firstname,this.nu_adherent.lastname,this.nu_adherent.email)
+        ThirdpartyDataService.create(this.nu_adherent)
             .then(response => {
               console.log(response.data);
               AdherentDataService.update(id, {socid:response.data})
@@ -238,7 +243,7 @@ import * as EmailValidator from 'email-validator';
       
       updateThirdparty(adherent){
         if (adherent.fk_soc){
-          ThirdpartyDataService.update(adherent.fk_soc,adherent.firstname,adherent.lastname,adherent.email)
+          ThirdpartyDataService.update(adherent.fk_soc,this.nu_adherent)
               .then(response => {
                 console.log(response.data);
               })
@@ -247,7 +252,7 @@ import * as EmailValidator from 'email-validator';
               });
          
         }else{
-          ThirdpartyDataService.create(this.nu_adherent.firstname,this.nu_adherent.lastname,this.nu_adherent.email)
+          ThirdpartyDataService.create(this.nu_adherent)
               .then(response => {
                 console.log(response.data);
                 AdherentDataService.update(adherent.id, {socid:response.data})
@@ -336,7 +341,7 @@ import * as EmailValidator from 'email-validator';
           this.currentIndex = -1;
         }
         
-        this.isValid = (this.getAdhesionDate() != null) && this.nu_adherent.firstname.length && this.nu_adherent.lastname.length && this.nu_adherent.moralPerson && (this.nu_adherent.email==null || EmailValidator.validate(this.nu_adherent.email))
+        this.isValid = (this.getAdhesionDate() != null) && (((this.nu_adherent.moralPerson == 'phy') && this.nu_adherent.firstname.length && this.nu_adherent.lastname.length ) || ((this.nu_adherent.moralPerson == 'mor') && this.nu_adherent.societe.length)) && (this.nu_adherent.email=='' || EmailValidator.validate(this.nu_adherent.email))
       },
   
       setActiveAdherent(adherent, index) {
