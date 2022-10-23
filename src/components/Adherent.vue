@@ -66,7 +66,7 @@ export default {
   },
   methods: {
     getAdherent(id) {
-      AdherentDataService.get(id)
+      AdherentDataService.get(this.$http,id)
         .then(response => {
           this.currentAdherent = response.data;
           console.log(response.data);
@@ -84,7 +84,7 @@ export default {
         published: status
       };
 
-      AdherentDataService.update(this.currentAdherent.id, data)
+      AdherentDataService.update(this.$http,this.currentAdherent.id, data)
         .then(response => {
           console.log(response.data);
           this.currentAdherent.published = status;
@@ -96,7 +96,7 @@ export default {
     },
 
     updateAdherent() {
-      AdherentDataService.update(this.currentAdherent.id, this.currentAdherent)
+      AdherentDataService.update(this.$http,this.currentAdherent.id, this.currentAdherent)
         .then(response => {
           console.log(response.data);
           this.message = 'The adherent was updated successfully!';
@@ -107,7 +107,7 @@ export default {
     },
 
     deleteAdherent() {
-      AdherentDataService.delete(this.currentAdherent.id)
+      AdherentDataService.delete(this.$http,this.currentAdherent.id)
         .then(response => {
           console.log(response.data);
           this.$router.push({ name: "adherents" });

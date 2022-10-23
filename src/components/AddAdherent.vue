@@ -37,6 +37,7 @@
             <input
               type="text"
               class="form-control"
+              ref="firstname"
               id="firstname"
               required
               v-model.trim="nu_adherent.firstname"
@@ -90,12 +91,12 @@
             />
           </div>
     
-          <button type="submit"  :disabled="!isValid" class="btn btn-success">Appliquer</button>
+          <button type="submit" ref="apply"  :disabled="!isValid" class="btn btn-success">Appliquer</button>
         </div>
     
         <div v-else>
           <h4>You submitted successfully!</h4>
-          <button class="btn btn-success" @click="newAdherent">Add</button>
+          <button class="btn btn-success" @click="newAdherent" ref="new">Nouveau</button>
         </div>
       </form>
     </div>
@@ -149,6 +150,7 @@
   </template>
   
   <script>
+
 import AdherentDataService from "../services/AdherentDataService";
 import BanklineDataService from "../services/BanklineDataService";
 import ThirdpartyDataService from "../services/ThirdpartyDataService";
@@ -179,11 +181,12 @@ import * as EmailValidator from 'email-validator';
     },
     methods: {
       getAdhesionDate(){
-        console.log(this.$root.subDatetime)
+        if (this.debug) {console.log(this.$root.subDatetime)}
         return this.$root.subDatetime;
 
       },
       saveAdherent() {
+        this.nu_adherent.lastname = this.nu_adherent.lastname.toLocaleUpperCase();
         var data = {
           firstname: this.nu_adherent.firstname,
           lastname: this.nu_adherent.lastname,
@@ -191,26 +194,27 @@ import * as EmailValidator from 'email-validator';
           email: this.nu_adherent.email,
           morphy: this.nu_adherent.moralPerson,
           statut: 1,
-          typeid: 2
+          typeid: this.$adherent_type
         };
         if (!this.editMode){
-          AdherentDataService.create(data)
+          AdherentDataService.create(this.$http,data)
             .then(response => {
               this.nu_adherent.id = response.data;
-              console.log(response.data);
+              if (this.debug) {console.log(response.data);}
               this.createThirdparty(response.data);
               if (this.subscription.amount){
                 this.saveSubscription(response.data);
               }
               this.submitted = true;
+              this.$refs.new.focus();
             })
             .catch(e => {
-              console.log(e);
+              if (this.debug) {console.log(e);}
             });
         }else{
-          AdherentDataService.update(this.nu_adherent.id, data)
+          AdherentDataService.update(this.$http,this.nu_adherent.id, data)
             .then(response => {
-              console.log(response.data);
+              if (this.debug) {console.log(response.data);}
               this.updateThirdparty(response.data)
               if (this.subscription.amount){
                 this.saveSubscription(response.data.id);
@@ -218,92 +222,93 @@ import * as EmailValidator from 'email-validator';
               this.submitted = true;
               this.editMode = false;
               this.currentAdherent = null;
+              this.$refs.new.focus();
             })
             .catch(e => {
-              console.log(e);
+              if (this.debug) {console.log(e);}
             });
         }
       },
       createThirdparty(id){
-        ThirdpartyDataService.create(this.nu_adherent)
+        ThirdpartyDataService.create(this.$http,this.nu_adherent)
             .then(response => {
-              console.log(response.data);
-              AdherentDataService.update(id, {socid:response.data})
+              if (this.debug) {console.log(response.data);}
+              AdherentDataService.update(this.$http,id, {socid:response.data})
                 .then(up_response => {
-                  console.log(up_response.data);
+                  if (this.debug) {console.log(up_response.data);}
                 })
                 .catch(e => {
-                  console.log(e);
+                  if (this.debug) {console.log(e);}
                 });
             })
             .catch(e => {
-              console.log(e);
+              if (this.debug) {console.log(e);}
             });
       },
       
       updateThirdparty(adherent){
         if (adherent.fk_soc){
-          ThirdpartyDataService.update(adherent.fk_soc,this.nu_adherent)
+          ThirdpartyDataService.update(this.$http,adherent.fk_soc,this.nu_adherent)
               .then(response => {
-                console.log(response.data);
+                if (this.debug) {console.log(response.data);}
               })
               .catch(e => {
-                console.log(e);
+                if (this.debug) {console.log(e);}
               });
          
         }else{
-          ThirdpartyDataService.create(this.nu_adherent)
+          ThirdpartyDataService.create(this.$http,this.nu_adherent)
               .then(response => {
-                console.log(response.data);
-                AdherentDataService.update(adherent.id, {socid:response.data})
+                if (this.debug) {console.log(response.data);}
+                AdherentDataService.update(this.$http,adherent.id, {socid:response.data})
                   .then(up_response => {
-                    console.log(up_response.data);
+                    if (this.debug) {console.log(up_response.data);}
                   })
                   .catch(e => {
-                    console.log(e);
+                    if (this.debug) {console.log(e);}
                   });
               })
               .catch(e => {
-                console.log(e);
+                if (this.debug) {console.log(e);}
               });
         }
       },
 
       saveSubscription(id){
         
-        BanklineDataService.createLine(this.bank_account,this.getAdhesionDate().valueOf()/1000, this.subscription.amount,"LIQ","Adhésion / cotisation")
+        BanklineDataService.createLine(this.$http,this.$bank_account,this.getAdhesionDate().valueOf()/1000, this.subscription.amount,"LIQ","Adhésion / cotisation")
             .then(b_line => {
-                console.log(b_line);
+                if (this.debug) {console.log(b_line);}
               
-              BanklineDataService.createLink(this.bank_account,b_line.data, id,`${this.base_domain}/htdocs/adherents/card.php?rowid=`,`${this.nu_adherent.firstname} ${this.nu_adherent.lastname}`,"member")
+              BanklineDataService.createLink(this.$http,this.$bank_account,b_line.data, id,`${this.$base_domain}/htdocs/adherents/card.php?rowid=`,`${this.nu_adherent.firstname} ${this.nu_adherent.lastname}`,"member")
               .then(b_link => {
-                console.log(b_link);
+                if (this.debug) {console.log(b_link);}
                 var start = this.getAdhesionDate();
                 var end = new Date(this.getAdhesionDate());
                 end.setFullYear(end.getFullYear()+1);
                
-                AdherentDataService.addSubscription(id, "2",start.valueOf()/1000,end.valueOf()/1000,this.subscription.amount,"Adhésion / cotisation")
+                AdherentDataService.addSubscription(this.$http,id, this.$adherent_type,start.valueOf()/1000,end.valueOf()/1000,this.subscription.amount,"Adhésion / cotisation")
                   .then(response => {
-                    console.log(response.data);
-                    AdherentDataService.addSubscriptionBankline(response.data, b_line.data)
+                    if (this.debug) {console.log(response.data);}
+                    AdherentDataService.addSubscriptionBankline(this.$http,response.data, b_line.data)
                     .then(finish => {
-                      console.log(finish.data);
+                      if (this.debug) {console.log(finish.data);}
                       
                     })
                     .catch(e => {
-                      console.log(e);
+                      if (this.debug) {console.log(e);}
                     });
                   })
                   .catch(e => {
-                    console.log(e);
+                    if (this.debug) {console.log(e);}
                   });
               })
               .catch(e => {
-                console.log(e);
+                if (this.debug) {console.log(e);}
               });
             })
             .catch(e => {
-              console.log(e);
+              if (this.debug) {console.log(e);}
             });
 
       },
@@ -319,17 +324,19 @@ import * as EmailValidator from 'email-validator';
           moralPerson: "phy"
         };
         this.isValid = false;
-        this.subscription = {};
+        this.subscription.amount = '';
         this.refreshList();
+        this.$refs.firstname.focus();
+
       },
       retrieveAdherents() {
-        AdherentDataService.getAll(this.nu_adherent.firstname,this.nu_adherent.lastname,this.nu_adherent.societe,this.nu_adherent.email)
+        AdherentDataService.getAll(this.$http,this.nu_adherent.firstname,this.nu_adherent.lastname,this.nu_adherent.societe,this.nu_adherent.email)
           .then(response => {
             this.adherents = response.data;
-            console.log(response.data);
+            if (this.debug) {console.log(response.data);}
           })
           .catch(e => {
-            console.log(e);
+            if (this.debug) {console.log(e);}
             this.adherents = [];
           });
       },
@@ -358,10 +365,19 @@ import * as EmailValidator from 'email-validator';
         this.nu_adherent.moralPerson = this.currentAdherent.morphy;
         this.nu_adherent.id = this.currentAdherent.id;
         this.editMode = true;
+        this.$refs.firstname.focus();
       },
       stopEdit(){
         this.editMode = false;
-        this.nu_adherent.id = null;
+        this.nu_adherent = {
+          id: null,
+          firstname: "",
+          lastname: "",
+          societe: "",
+          email: "",
+          moralPerson: "phy"
+        };
+        this.$refs.firstname.focus();
       },
       formatDate(dateString) {
             const date = new Date(parseInt(dateString)*1000);
@@ -371,6 +387,7 @@ import * as EmailValidator from 'email-validator';
     },
     mounted() {
       this.retrieveAdherents();
+      this.$refs.firstname.focus()
     }
   };
   </script>

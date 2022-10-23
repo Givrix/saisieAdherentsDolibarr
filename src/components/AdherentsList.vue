@@ -68,7 +68,7 @@
     },
     methods: {
       retrieveAdherents() {
-        AdherentDataService.getAll()
+        AdherentDataService.getAll(this.$http)
           .then(response => {
             this.adherents = response.data;
             console.log(response.data);
@@ -90,7 +90,7 @@
       },
   
       removeAllAdherents() {
-        AdherentDataService.deleteAll()
+        AdherentDataService.deleteAll(this.$http)
           .then(response => {
             console.log(response.data);
             this.refreshList();
@@ -101,7 +101,7 @@
       },
       
       searchTitle() {
-        AdherentDataService.findByTitle(this.title)
+        AdherentDataService.findByTitle(this.$http,this.title)
           .then(response => {
             this.adherents = response.data;
             this.setActiveAdherent(null);

@@ -1,8 +1,7 @@
-import http from "../http-common";
 
 
 class BanklineDataService {
-    createLine(id, date, amount, type, label) {
+    async createLine(http,id, date, amount, type, label) {
       var bankline = {
         date: date,
         amount: amount,
@@ -10,9 +9,9 @@ class BanklineDataService {
         label: label
       }
         console.log(bankline)
-        return http.post(`/bankaccounts/${id}/lines`, bankline);
+        return await http.post(`/bankaccounts/${id}/lines`, bankline);
       }
-    createLink(id, line_id, url_id, url, label, type) {
+    async createLink(http,id, line_id, url_id, url, label, type) {
       var banklink = {
         url_id: url_id,
         url: url,
@@ -20,7 +19,7 @@ class BanklineDataService {
         type: type
       }
         console.log(banklink)
-        return http.post(`/bankaccounts/${id}/lines/${line_id}/links`, banklink);
+        return await http.post(`/bankaccounts/${id}/lines/${line_id}/links`, banklink);
       } 
        
 }

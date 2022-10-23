@@ -1,18 +1,7 @@
-import http from "../http-common";
 
-
-http.interceptors.request.use(request => {
-  console.log('Starting Request', JSON.stringify(request, null, 2))
-  return request
-})
-
-http.interceptors.response.use(response => {
-  console.log('Response:', JSON.stringify(response, null, 2))
-  return response
-})
 
 class AdherentDataService {
-  getAll(firstname,lastname,societe,email) {
+  async getAll(http,firstname,lastname,societe,email) {
     let filters = ''
     if (firstname != ''){
       filters += `(SOUNDEX(t.firstname) = SOUNDEX('${firstname}') OR t.firstname LIKE '%${firstname}%')`;
@@ -46,28 +35,28 @@ class AdherentDataService {
         limit: '10',
         sqlfilters: filters
     });
-    return http.get("/members",{
+    return await http.get("/members",{
       params
     });
   }
 
-  get(id) {
+  async get(http,id) {
     
-    return http.get(`/members/${id}`);
+    return await http.get(`/members/${id}`);
   }
 
-  create(data) {
-    console.log(data)
-    return http.post("/members", data);
+  async create(http,data) {
+    console.log(data);
+    return await http.post("/members", data);
   }
 
-  async update(id, data) {
+  async update(http,id, data) {
     console.log(data)
 
     return await http.put(`/members/${id}`, data);
   }
 
-  addSubscription(id,fk_type,start_date,end_date,amount,label) {
+  async addSubscription(http,id,fk_type,start_date,end_date,amount,label) {
     var subscription = {
       fk_type: fk_type,
       start_date: start_date,
@@ -76,12 +65,12 @@ class AdherentDataService {
       label: label
     }
     console.log(subscription)
-    return http.post(`/members/${id}/subscriptions`, subscription);
+    return await http.post(`/members/${id}/subscriptions`, subscription);
     
   }
-  addSubscriptionBankline(id,fk_bank){
+  async addSubscriptionBankline(http,id,fk_bank){
     console.log(fk_bank)
-    return http.put(`/subscriptions/${id}`, {
+    return await http.put(`/subscriptions/${id}`, {
       fk_bank: fk_bank,});
   }
   

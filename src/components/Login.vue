@@ -39,12 +39,12 @@ export default {
   props: {},
   methods: {
     validateBeforeSubmit () {
-      LoginDataService.login(this.login, this.password)
+      LoginDataService.login(this.$http,this.login, this.password)
             .then(response => {
               if (response.data.success) {
                 this.error = false
                 storageHelper.setItem('dolapikey', response.data.success.token)
-                LoginDataService.setToken(response.data.success.token)
+                //LoginDataService.setToken(response.data.success.token)
                 this.$root.connected = true;
                 this.$router.push({path : '/add'})
               } else {

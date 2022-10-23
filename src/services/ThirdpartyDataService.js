@@ -1,9 +1,6 @@
-import http from "../http-common";
-
-
 
 class ThirdpartyDataService {
-    create(adherent) {
+    async create(http,adherent) {
       var name = ''
       if(adherent.moralPerson == 'phy'){
         name = adherent.firstname+' '+adherent.lastname
@@ -20,9 +17,9 @@ class ThirdpartyDataService {
         fournisseur: "0"
       }
         console.log(thirdparty)
-        return http.post(`/thirdparties`, thirdparty);
+        return await http.post(`/thirdparties`, thirdparty);
     }
-    update(id, adherent) {
+    async update(http,id, adherent) {
       var name = ''
       if(adherent.moralPerson == 'phy'){
         name = adherent.firstname+' '+adherent.lastname
@@ -36,7 +33,7 @@ class ThirdpartyDataService {
         email: adherent.email
       }
         console.log(thirdparty)
-        return http.put(`/thirdparties/${id}`, thirdparty);
+        return await http.put(`/thirdparties/${id}`, thirdparty);
     }
     
 }
