@@ -9,5 +9,5 @@ if (storageHelper.getItem('dolapikey')){
     }
 }
 export default axios.create({
-  baseURL: `http://${config.domain}/htdocs/api/index.php`, headers
+  baseURL: `${config.protocol}://${config.domain}/htdocs/api/index.php`, headers
 });
