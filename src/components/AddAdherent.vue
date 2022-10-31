@@ -3,7 +3,22 @@
   <div class="list row">
     <div class="col-md-6">
       <form class="submit-form" v-on:submit.prevent="saveAdherent">
-        <div v-if="!submitted">
+        <Teleport to="#dateForm">
+          <span class="navbar-text">Jour d'adhésion</span>
+            <div class="form-group">
+                <input
+                  type="date"
+                  class="form-control"
+                  id="subdate"
+                  required
+                  v-model="subdate"
+                  name="subdate"
+                  ref="subdate"
+                  v-on:change="checkDate"
+                />
+          </div>
+        </Teleport>
+        <div v-show="!submitted">
           
           <label for="moralPerson">Nature de l'adhérent</label>
           <div class="form-check">
@@ -55,7 +70,7 @@
               v-on:input="refreshList"
             />
           </div>
-          <div class="form-group" v-if="nu_adherent.moralPerson == 'mor'">
+          <div class="form-group" v-show="nu_adherent.moralPerson == 'mor'">
             <label for="societe">Société</label>
             <input
               type="text"
@@ -94,7 +109,7 @@
           <button type="submit" ref="apply"  :disabled="!isValid" class="btn btn-success">Appliquer</button>
         </div>
     
-        <div v-else>
+        <div v-show="submitted">
           <h4>You submitted successfully!</h4>
           <button class="btn btn-success" @click="newAdherent" ref="new">Nouveau</button>
         </div>
@@ -176,13 +191,15 @@ import * as EmailValidator from 'email-validator';
         currentAdherent: null,
         currentIndex: -1,
         editMode: false,
+        subdate: null,
+        subDatetime: null,
         isValid: false,
       };
     },
     methods: {
       getAdhesionDate(){
-        if (this.debug) {console.log(this.$root.subDatetime)}
-        return this.$root.subDatetime;
+        if (this.debug) {console.log(this.subDatetime)}
+        return this.subDatetime;
 
       },
       saveAdherent() {
@@ -276,15 +293,15 @@ import * as EmailValidator from 'email-validator';
 
       saveSubscription(id){
         
-        BanklineDataService.createLine(this.$http,this.$bank_account,this.getAdhesionDate().valueOf()/1000, this.subscription.amount,"LIQ","Adhésion / cotisation")
+        BanklineDataService.createLine(this.$http,this.$bank_account,this.subDatetime.valueOf()/1000, this.subscription.amount,"LIQ","Adhésion / cotisation")
             .then(b_line => {
                 if (this.debug) {console.log(b_line);}
               
               BanklineDataService.createLink(this.$http,this.$bank_account,b_line.data, id,`${this.$base_domain}/htdocs/adherents/card.php?rowid=`,`${this.nu_adherent.firstname} ${this.nu_adherent.lastname}`,"member")
               .then(b_link => {
                 if (this.debug) {console.log(b_link);}
-                var start = this.getAdhesionDate();
-                var end = new Date(this.getAdhesionDate());
+                var start = this.subDatetime;
+                var end = new Date(this.subDatetime);
                 end.setFullYear(end.getFullYear()+1);
                
                 AdherentDataService.addSubscription(this.$http,id, this.$adherent_type,start.valueOf()/1000,end.valueOf()/1000,this.subscription.amount,"Adhésion / cotisation")
@@ -326,7 +343,7 @@ import * as EmailValidator from 'email-validator';
         this.isValid = false;
         this.subscription.amount = '';
         this.refreshList();
-        this.$refs.firstname.focus();
+        this.setFillingFocus();
 
       },
       retrieveAdherents() {
@@ -348,7 +365,7 @@ import * as EmailValidator from 'email-validator';
           this.currentIndex = -1;
         }
         
-        this.isValid = (this.getAdhesionDate() != null) && (((this.nu_adherent.moralPerson == 'phy') && this.nu_adherent.firstname.length && this.nu_adherent.lastname.length ) || ((this.nu_adherent.moralPerson == 'mor') && this.nu_adherent.societe.length)) && (this.nu_adherent.email=='' || EmailValidator.validate(this.nu_adherent.email))
+        this.isValid = (this.subDatetime != null) && (((this.nu_adherent.moralPerson == 'phy') && this.nu_adherent.firstname.length && this.nu_adherent.lastname.length ) || ((this.nu_adherent.moralPerson == 'mor') && this.nu_adherent.societe.length)) && (this.nu_adherent.email=='' || EmailValidator.validate(this.nu_adherent.email))
       },
   
       setActiveAdherent(adherent, index) {
@@ -365,7 +382,7 @@ import * as EmailValidator from 'email-validator';
         this.nu_adherent.moralPerson = this.currentAdherent.morphy;
         this.nu_adherent.id = this.currentAdherent.id;
         this.editMode = true;
-        this.$refs.firstname.focus();
+        this.setFillingFocus();
       },
       stopEdit(){
         this.editMode = false;
@@ -377,12 +394,26 @@ import * as EmailValidator from 'email-validator';
           email: "",
           moralPerson: "phy"
         };
-        this.$refs.firstname.focus();
+        this.setFillingFocus();
       },
       formatDate(dateString) {
             const date = new Date(parseInt(dateString)*1000);
                 // Then specify how you want your dates to be formatted
             return new Intl.DateTimeFormat('fr-FR').format(date);
+      },
+      checkDate(){
+        const subdate = new Date(this.subdate);
+          if (subdate.valueOf()!=0 && subdate.toString() != 'Invalid Date'){
+            this.subDatetime = subdate;
+          }
+        this.refreshList()
+      },
+      setFillingFocus(){
+        if(this.subDatetime != null){
+          this.$refs.firstname.focus();
+        }else{
+          this.$refs.subdate.focus();
+        }
       }
     },
     mounted() {

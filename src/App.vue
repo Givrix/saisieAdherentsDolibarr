@@ -14,19 +14,8 @@
         </div>
             
           
-        <form class="navbar-form d-flex justify-content-between">
-          <span class="navbar-text">Jour d'adhésion</span>
-          <div class="form-group">
-              <input
-                type="date"
-                class="form-control"
-                id="subdate"
-                required
-                v-model="subdate"
-                name="subdate"
-                v-on:change="checkDate"
-              />
-              </div>
+        <form id="dateForm" class="navbar-form d-flex justify-content-between">
+          
 
             </form>
         <form v-if="connected" class="d-flex justify-content-between" >
@@ -62,24 +51,18 @@ export default {
   },
   data() {
       return {
-        subdate: null,
-        subDatetime: null,
         connected: false
       }
   },
   methods: {
-    checkDate(){
-      const subdate = new Date(this.subdate);
-        if (subdate.valueOf()!=0 && subdate.toString() != 'Invalid Date'){
-          this.subDatetime = subdate;
-        }
-    },
     disconnect(){
       storageHelper.removeItem('dolapikey')
       this.connected = false;
       this.$router.push({path : '/login'})
     }
 
+  },
+  mounted() {
   }
 };
 </script>
