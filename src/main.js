@@ -40,7 +40,9 @@ import router from './router'
 const app = createApp(App);
 
 app.config.globalProperties.$base_domain = `${config.protocol}://${config.domain}`;
-app.config.globalProperties.$bank_account = config.cash_account;
+app.config.globalProperties.$cash_account = config.cash_account;
+app.config.globalProperties.$card_account = config.card_account;
+app.config.globalProperties.$check_account = config.check_account;
 app.config.globalProperties.$adherent_type = config.adherent_type;
 app.config.globalProperties.debug = config.debug;
 

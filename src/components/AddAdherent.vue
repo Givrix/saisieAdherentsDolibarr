@@ -105,16 +105,69 @@
               v-on:input="refreshList"
             />
           </div>
+          <label for="payMode">Mode de paiement</label>
+          <div class="form-check">
+              <label class="form-check-label" for="payModeCash">Espèces</label>
+              <input
+                type="radio"
+                class="form-check-input"
+                id="payModeCash"
+                required
+                v-model="subscription.payMode"
+                name="payMode"
+                value='cash'
+                checked
+              />
+            </div>
+            <div class="form-check">
+              <label class="form-check-label"  for="payModeCard">CB</label>
+              <input
+                type="radio"
+                class="form-check-input"
+                id="payModeCard"
+                required
+                v-model="subscription.payMode"
+                name="payMode"
+                value="card"
+              />
+          </div>
+          <div class="form-check">
+              <label class="form-check-label"  for="payModeCheck">Chèque</label>
+              <input
+                type="radio"
+                class="form-check-input"
+                id="payModeCheck"
+                required
+                v-model="subscription.payMode"
+                name="payMode"
+                value="check"
+              />
+          </div>
     
           <button type="submit" ref="apply"  :disabled="!isValid" class="btn btn-success">Appliquer</button>
         </div>
     
         <div v-show="submitted">
-          <h4>You submitted successfully!</h4>
+          <h4>Saisie réussie !</h4>
           <button class="btn btn-success" @click="newAdherent" ref="new">Nouveau</button>
         </div>
       </form>
     </div>
+    <div class="col-md-3">
+        <h4>Adherents List</h4>
+        <ul class="list-group">
+          <li class="list-group-item"
+            :class="{ active: index == currentIndex }"
+            v-for="(adherent, index) in adherents"
+            :key="index"
+            @click="setActiveAdherent(adherent, index)"
+          >
+            {{ adherent.firstname+" "+adherent.lastname }}
+          </li>
+        </ul>
+  
+        
+      </div>
     <div class="col-md-3">
         <div v-if="currentAdherent">
           <h4>Adherent</h4>
@@ -146,21 +199,7 @@
           <p>Sélectionner un adhérent à gauche pour afficher</p>
         </div>
       </div>
-      <div class="col-md-3">
-        <h4>Adherents List</h4>
-        <ul class="list-group">
-          <li class="list-group-item"
-            :class="{ active: index == currentIndex }"
-            v-for="(adherent, index) in adherents"
-            :key="index"
-            @click="setActiveAdherent(adherent, index)"
-          >
-            {{ adherent.firstname+" "+adherent.lastname }}
-          </li>
-        </ul>
-  
-        
-      </div>
+      
   </div>
   </template>
   
@@ -181,10 +220,12 @@ import * as EmailValidator from 'email-validator';
           lastname: "",
           societe: "",
           email: "",
-          moralPerson: "phy"
+          moralPerson: "phy",
+          last_subscription_date_end: null
         },
         subscription: {
-          amount: ''
+          amount: '',
+          payMode: "cash"
         },
         submitted: false,
         adherents: [],
@@ -223,7 +264,10 @@ import * as EmailValidator from 'email-validator';
                 this.saveSubscription(response.data);
               }
               this.submitted = true;
-              this.$refs.new.focus();
+              this.adherents = [];
+              this.$nextTick(() => {
+                this.$refs.new.focus();
+              })
             })
             .catch(e => {
               if (this.debug) {console.log(e);}
@@ -239,7 +283,10 @@ import * as EmailValidator from 'email-validator';
               this.submitted = true;
               this.editMode = false;
               this.currentAdherent = null;
-              this.$refs.new.focus();
+              this.adherents = [];
+              this.$nextTick(() => {
+                this.$refs.new.focus();
+              })
             })
             .catch(e => {
               if (this.debug) {console.log(e);}
@@ -292,16 +339,39 @@ import * as EmailValidator from 'email-validator';
       },
 
       saveSubscription(id){
-        
-        BanklineDataService.createLine(this.$http,this.$bank_account,this.subDatetime.valueOf()/1000, this.subscription.amount,"LIQ","Adhésion / cotisation")
+        var bank_account;
+        var pay_mode;
+        switch(this.subscription.payMode){
+          case 'cash':
+            bank_account = this.$cash_account;
+            pay_mode = 'LIQ';
+            break;
+          case 'card':
+            bank_account = this.$card_account;
+            pay_mode = 'CB';
+            break;
+          case 'check':
+            bank_account = this.$check_account;
+            pay_mode = 'CHQ';
+          break;
+        }
+        BanklineDataService.createLine(this.$http,bank_account,this.subDatetime.valueOf()/1000, this.subscription.amount,pay_mode,"Adhésion / cotisation")
             .then(b_line => {
                 if (this.debug) {console.log(b_line);}
               
-              BanklineDataService.createLink(this.$http,this.$bank_account,b_line.data, id,`${this.$base_domain}/htdocs/adherents/card.php?rowid=`,`${this.nu_adherent.firstname} ${this.nu_adherent.lastname}`,"member")
+              BanklineDataService.createLink(this.$http,bank_account,b_line.data, id,`${this.$base_domain}/htdocs/adherents/card.php?rowid=`,`${this.nu_adherent.firstname} ${this.nu_adherent.lastname}`,"member")
               .then(b_link => {
                 if (this.debug) {console.log(b_link);}
-                var start = this.subDatetime;
-                var end = new Date(this.subDatetime);
+                var start;
+                var end;
+                if (this.nu_adherent.last_subscription_date_end===null || parseInt(this.nu_adherent.last_subscription_date_end)*1000 < this.subDatetime){
+                  start = this.subDatetime;
+                  end = new Date(this.subDatetime);
+                }else{
+                  var subscription_date_end = parseInt(this.nu_adherent.last_subscription_date_end)*1000;
+                  start = subscription_date_end;
+                  end = new Date(subscription_date_end);
+                }
                 end.setFullYear(end.getFullYear()+1);
                
                 AdherentDataService.addSubscription(this.$http,id, this.$adherent_type,start.valueOf()/1000,end.valueOf()/1000,this.subscription.amount,"Adhésion / cotisation")
@@ -381,6 +451,7 @@ import * as EmailValidator from 'email-validator';
         this.nu_adherent.societe = this.currentAdherent.societe;
         this.nu_adherent.moralPerson = this.currentAdherent.morphy;
         this.nu_adherent.id = this.currentAdherent.id;
+        this.nu_adherent.last_subscription_date_end = this.currentAdherent.last_subscription_date_end;
         this.editMode = true;
         this.setFillingFocus();
       },
@@ -417,7 +488,6 @@ import * as EmailValidator from 'email-validator';
       }
     },
     mounted() {
-      this.retrieveAdherents();
       this.$refs.firstname.focus()
     }
   };
