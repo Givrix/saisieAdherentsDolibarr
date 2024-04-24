@@ -19,7 +19,7 @@
           </div>
         </Teleport>
         <div v-show="!submitted">
-          
+          <div class="form-group" v-show="natureChoice">
           <label for="moralPerson">Nature de l'adhérent</label>
           <div class="form-check">
               <label class="form-check-label" for="moralPerson0">Physique</label>
@@ -46,6 +46,7 @@
                 name="moralPerson"
                 value="mor"
               />
+          </div>
           </div>
           <div class="form-group" >
             <label for="firstname">Prénom</label>
@@ -235,6 +236,7 @@ import * as EmailValidator from 'email-validator';
         subdate: null,
         subDatetime: null,
         isValid: false,
+        natureChoice: false
       };
     },
     methods: {
@@ -373,6 +375,12 @@ import * as EmailValidator from 'email-validator';
                   end = new Date(subscription_date_end);
                 }
                 end.setFullYear(end.getFullYear()+1);
+                if (this.debug) {
+                  console.log("Date début cotise :");
+                  console.log(start);
+                  console.log("Date fin cotise :");
+                  console.log(end);
+                }
                
                 AdherentDataService.addSubscription(this.$http,id, this.$adherent_type,start.valueOf()/1000,end.valueOf()/1000,this.subscription.amount,"Adhésion / cotisation")
                   .then(response => {
@@ -388,7 +396,8 @@ import * as EmailValidator from 'email-validator';
                   })
                   .catch(e => {
                     if (this.debug) {console.log(e);}
-                  });
+                  }); 
+                  
               })
               .catch(e => {
                 if (this.debug) {console.log(e);}

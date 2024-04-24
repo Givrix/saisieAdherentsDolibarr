@@ -4,35 +4,39 @@ class AdherentDataService {
   async getAll(http,firstname,lastname,societe,email) {
     let filters = ''
     if (firstname != ''){
-      filters += `(SOUNDEX(t.firstname) = SOUNDEX('${firstname}') OR t.firstname LIKE '%${firstname}%')`;
+      // SOUNDEX(t.firstname) = SOUNDEX('${firstname}') OR 
+      filters += `(t.firstname:LIKE:'%${firstname}%')`;
 
     }
     if (lastname != ''){
       if (filters != ''){
         filters += ' AND ';
       }
-      filters += `(SOUNDEX(t.lastname) = SOUNDEX('${lastname}') OR t.lastname LIKE '%${lastname}%')`;
+      // SOUNDEX(t.lastname) = SOUNDEX('${lastname}') OR 
+      filters += `(t.lastname:LIKE:'%${lastname}%')`;
 
     }
     if (email != ''){
       if (filters != ''){
         filters += ' AND ';
       }
-      filters += `(SOUNDEX(t.email) = SOUNDEX('${email}') OR t.email LIKE '%${email}%')`;
+      // SOUNDEX(t.email) = SOUNDEX('${email}') OR 
+      filters += `(t.email:LIKE:'%${email}%')`;
 
     }
     if (societe != ''){
       if (filters != ''){
         filters += ' AND ';
       }
-      filters += `(SOUNDEX(t.societe) = SOUNDEX('${societe}') OR t.societe LIKE '%${societe}%')`;
+      // SOUNDEX(t.societe) = SOUNDEX('${societe}') OR 
+      filters += `(t.societe:LIKE:'%${societe}%')`;
 
     }
     console.log(filters);
     const params = new URLSearchParams({
         sortfield: 't.rowid',
         sortorder: 'ASC',
-        limit: '10',
+        limit: '30',
         sqlfilters: filters
     });
     return await http.get("/members",{
